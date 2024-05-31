@@ -1,0 +1,49 @@
+name: matrix outputs
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/matrix-outputs.yml'
+
+jobs:
+  write-matrix:
+    strategy:
+      matrix:
+        include:
+          - id: 32
+            value: 'lily of the valley'
+          - id: 31
+            value: 'sweat pea'
+          - id: 30
+            value: 'hyacinth'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: cloudposse/github-action-matrix-outputs-write@v1
+        with:
+          matrix-step-name: ${{ github.job }}
+          matrix-key: ${{ matrix.id }}
+          outputs: |-
+            value: ${{ matrix.value }}
+
+  read-matrix:
+    needs: [ write-matrix ]
+    runs-on: ubuntu-latest
+    steps:
+      - id: read
+        uses: cloudposse/github-action-matrix-outputs-read@v1
+        with:
+          matrix-step-name: write-matrix
+      - shell: bash
+        run: |
+          echo "${{ steps.read.outputs.result }}"
+    outputs:
+      values: ${{ steps.read.outputs.result }}
+
+  test-outputs:
+    needs: [ read-matrix ]
+    runs-on: ubuntu-latest
+    steps:
+      - shell: bash
+        run: |
+          echo ${{ fromJSON(needs.read-matrix.outputs.values).value[32] }}
