@@ -1,0 +1,40 @@
+name: github-script
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/gh-script.yml'
+      - '.github/workflows/matrix.json'
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      plugins: ${{ steps.readfile.outputs.result }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: readfile
+        uses: actions/github-script@v7
+        with:
+          result-encoding: string
+          script: |
+            const fs = require('fs')
+            var json_s = fs.readFileSync('.github/workflows/matrix.json')
+            var json_o = JSON.parse(json_s)
+            return JSON.stringify(json_o.list.${{ env.key }}.map((plugin) => {
+              return json_o.detail[plugin]
+            }))
+        env:
+          key: manylinux_2_28_aarch64
+
+  test-matrix:
+    needs: [ prepare ]
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.prepare.outputs.plugins) }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "${{ matrix.plugin }}"
