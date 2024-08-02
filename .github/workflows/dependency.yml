@@ -1,0 +1,29 @@
+name: dependency skipped
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/dependency.yml'
+
+jobs:
+  not-run:
+    if: false
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Unreachable"
+
+  checkpoint:
+    if: ${{ !failure() }}
+    needs: not-run
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "Job Result: ${{ needs.not-run.result }}"
+
+  run:
+    needs: checkpoint
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "Job Result: ${{ needs.checkpoint.result }}"
