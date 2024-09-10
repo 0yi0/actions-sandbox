@@ -1,0 +1,28 @@
+name: docker-bake
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/docker-bake.yml'
+
+jobs:
+  bake:
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - base-2204-gcc
+          - base-2004-clang-aarch64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: 'WasmEdge/WasmEdge'
+          sparse-checkout: '/utils'
+          sparse-checkout-cone-mode: false
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/bake-action@v5
+        with:
+          files: utils/docker/docker-bake.ubuntu.hcl
+          targets: ${{ matrix.target }}
