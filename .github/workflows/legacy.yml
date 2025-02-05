@@ -1,0 +1,38 @@
+name: legacy actions
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/legacy.yml'
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    outputs:
+      artifact: ${{ steps.var.outputs.artifact }}
+    steps:
+      - id: var
+        run: |
+          echo "artifact=env.log" >> $GITHUB_OUTPUT
+      - name: Generate dummy artifact
+        run: |
+          env > ${{ steps.var.outputs.artifact }}
+      - name: Print first line
+        run: |
+          head -n 1 ${{ steps.var.outputs.artifact }}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.var.outputs.artifact }}
+          path: ${{ steps.var.outputs.artifact }}
+
+  download:
+    needs: upload
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: ${{ steps.var.outputs.artifact }}
+      - name: Print first line
+        run: |
+          head -n 1 ${{ steps.var.outputs.artifact }}
