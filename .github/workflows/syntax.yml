@@ -1,0 +1,24 @@
+# https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/evaluate-expressions-in-workflows-and-actions
+name: Expressions
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/syntax.yml'
+
+jobs:
+  test-matrix:
+    strategy:
+      fail-fast: false
+      matrix:
+        cond: [ true, false ]
+    runs-on: ubuntu-latest
+    env:
+      some_env_var: "hello"
+    steps:
+      - id: var
+        run: |
+          echo "cond=${{ matrix.cond }}" >> $GITHUB_OUTPUT
+      - run: |
+          echo ${{ fromJSON(steps.var.outputs.cond) && '$some_env_var' || '$some_env_var world' }}
